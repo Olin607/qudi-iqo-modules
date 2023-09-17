@@ -33,7 +33,7 @@ class MotorAxisDummy:
         self.label = label
 
 
-class MotorDummy(Base, MotorInterface):
+class MotorDummy(MotorInterface):
     """ This is the dummy class to simulate a motorized stage.
 
     Example config for copy-paste:
