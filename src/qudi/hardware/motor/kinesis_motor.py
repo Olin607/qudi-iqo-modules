@@ -22,7 +22,7 @@ If not, see <https://www.gnu.org/licenses/>.
 """
 This module was developed from PyAPT, written originally by Michael Leung
 (mcleung@stanford.edu). Have a look in:
-    https://github.com/HaeffnerLab/Haeffner-Lab-LabRAD-Tools/blob/master/cdllservers/APTMotor/APTMotorServer.py
+    https://github.com/HaeffnerLab/Haeffner-Lab-LabRAD-Tools/blob/master/cdllservers/KinesisMotor/KinesisMotorServer.py
 APT.dll and APT.lib were provided to PyAPT thanks to SeanTanner@ThorLabs .
 All the specific error and status code are taken from:
     https://github.com/UniNE-CHYN/thorpy
@@ -38,6 +38,8 @@ from qudi.util.paths import get_home_dir
 from qudi.util.paths import get_main_dir
 from ctypes import c_long, c_buffer, c_float, windll, pointer
 from qudi.interface.motor_interface import MotorInterface
+from abc import abstractmethod
+from pylablib.devices import Thorlabs
 import os
 import platform
 
@@ -45,7 +47,7 @@ class KinesisMotor:
     pass
 
 class KinesisStage(MotorInterface):
-    """ Control class for an arbitrary collection of APTmotor axes.
+    """ Control class for an arbitrary collection of KinesisMotor axes.
 
     The required config file entries are based around a few key ideas:
       - There needs to be a list of axes, so that everything can be "iterated" across this list.
@@ -58,7 +60,7 @@ class KinesisStage(MotorInterface):
     Example config for copy-paste
 
     hwp_motor:
-        module.Class: 'motor.aptmotor.APTStage'
+        module.Class: 'motor.KinesisMotor.APTStage'
         options:
             dll_path:\ 'C:\Program Files\Thorlabs\'
             axis_labels:
@@ -79,7 +81,7 @@ class KinesisStage(MotorInterface):
     A config file entry for a linear xy-axis stage would look like:
 
     hwp_motor:
-        module.Class: 'motor.aptmotor.APTStage'
+        module.Class: 'motor.KinesisMotor.APTStage'
         options:
             dll_path: 'C:\\Program Files\\Thorlabs\\'
             axis_labels:
@@ -111,6 +113,118 @@ class KinesisStage(MotorInterface):
                     acc_max: 10.0
 
     """
+
+    def on_activate(self):
+        """ Initialize instance variables and connect to hardware as configured.
+        """
+        self.log.warning("This module has not been tested on the new qudi core."
+                         "Use with caution and contribute bug fixed back, please.")
+        # config = self.getConfiguration()
+        #
+        # self.x_stage = Thorlabs.KinesisMotor(config["option"]["x"]["serial_num"])
+        # self.y_stage = Thorlabs.KinesisMotor(config["option"]["y"]["serial_num"])
+        # self.z_stage = Thorlabs.KinesisMotor(config["option"]["z"]["serial_num"])
+
+        self.x_stage = Thorlabs.KinesisMotor("27262884")
+        self.y_stage = Thorlabs.KinesisMotor("27256199")
+        self.z_stage = Thorlabs.KinesisMotor("27256522")
+        # # get the config for this device.
+        # config = self.getConfiguration()
+        #
+        # # create the magnet dump folder
+        # # TODO: Magnet stuff needs to move to magnet interfuses. It cannot be in the motor stage class.
+        # self._magnet_dump_folder = self._get_magnet_dump()
+        #
+        # # Path to the Thorlabs KinesisMotor DLL
+        # # Check the config for the DLL path first
+        # if 'dll_path' in config:
+        #     path_dll = config['dll_path']
+        #
+        # # Otherwise, look in the "standard form" thirdparty directory
+        # else:
+        #
+        #     if platform.architecture()[0] == '64bit':
+        #         path_dll = os.path.join(get_main_dir(),
+        #                                 'thirdparty',
+        #                                 'thorlabs',
+        #                                 'win64',
+        #                                 'APT.dll')
+        #     elif platform.architecture()[0] == '32bit':
+        #         path_dll = os.path.join(get_main_dir(),
+        #                                 'thirdparty',
+        #                                 'thorlabs',
+        #                                 'win64',
+        #                                 'APT.dll')
+        #     else:
+        #         self.log.error('Unknown platform, cannot load the Thorlabs dll.')
+        #
+        # # Get the list of axis labels.
+        # if 'axis_labels' in config.keys():
+        #     axis_label_list = config['axis_labels']
+        # else:
+        #     self.log.error(
+        #         'No axis labels were specified for the KinesisMotor stage.'
+        #         'It is impossible to proceed. You might need to read more about how to configure the APTStage'
+        #         'in the config file, and you can find this information (with example) at'
+        #         'https://ulm-iqo.github.io/qudi-generated-docs/html-docs/classKinesisMotor_1_1APTStage.html#details'
+        #     )
+        #
+        # # The references to the different axis are stored in this dictionary:
+        # self._axis_dict = OrderedDict()
+        #
+        # hw_conf_dict = self._get_config()
+        #
+        # limits_dict = self.get_constraints()
+        #
+        # for axis_label in axis_label_list:
+        #     serialnumber = hw_conf_dict[axis_label]['serial_num']
+        #     hw_type = hw_conf_dict[axis_label]['hw_type']
+        #     label = axis_label
+        #     pitch = hw_conf_dict[axis_label]['pitch']
+        #     unit = hw_conf_dict[axis_label]['unit']
+        #
+        #     self._axis_dict[axis_label] = KinesisMotor(path_dll,
+        #                                            serialnumber,
+        #                                            hw_type,
+        #                                            label,
+        #                                            unit
+        #                                            )
+        #     self._axis_dict[axis_label].initializeHardwareDevice()
+        #
+        #     # adapt the hardware controller to the proper unit set:
+        #     if hw_conf_dict[axis_label]['unit'] == '°' or hw_conf_dict[axis_label]['unit'] == 'degree':
+        #         unit = 2  # for rotation movement
+        #         # FIXME: the backlash parameter has to be taken from the config and
+        #         #       should not be hardcoded here!!
+        #         backlash_correction = 0.2
+        #     else:
+        #         unit = 1  # default value for linear movement
+        #         backlash_correction = 0.10e-3
+        #
+        #     self._axis_dict[axis_label].set_stage_axis_info(
+        #         limits_dict[axis_label]['pos_min'],
+        #         limits_dict[axis_label]['pos_max'],
+        #         pitch=pitch,
+        #         unit=unit
+        #     )
+        #     self._axis_dict[axis_label].setVelocityParameters(
+        #         limits_dict[axis_label]['vel_min'],
+        #         limits_dict[axis_label]['acc_max'],
+        #         limits_dict[axis_label]['vel_max']
+        #     )
+        #
+        #     self._axis_dict[axis_label].set_velocity(limits_dict[axis_label]['vel_max'])
+        #
+        #     # TODO: what does this do?
+        #     self._axis_dict[axis_label].setHardwareLimitSwitches(2, 2)
+        #
+        #     self._axis_dict[axis_label]._wait_until_done = False
+        #
+        #     # set the backlash correction since the forward movement is
+        #     # preciser than the backward:
+        #     self._axis_dict[axis_label].set_backlash(backlash_correction)
+    def on_deactivate(self):
+        pass
 
     def get_constraints(self):
         """ Retrieve the hardware constrains from the motor device.
@@ -187,7 +301,8 @@ class KinesisStage(MotorInterface):
 
         @return int: error code (0:OK, -1:error)
         """
-        pass
+        move = param_dict[label_axis]
+        self._x_stage.move_to(move)
 
     def move_abs(self, param_dict):
         """ Moves stage to absolute position (absolute movement)
@@ -202,7 +317,6 @@ class KinesisStage(MotorInterface):
         """
         pass
 
-    @abstractmethod
     def abort(self):
         """ Stops movement of the stage
 
