@@ -125,7 +125,6 @@ class KinesisStage(MotorInterface):
         # self.y_stage = Thorlabs.KinesisMotor(config["option"]["y"]["serial_num"])
         # self.z_stage = Thorlabs.KinesisMotor(config["option"]["z"]["serial_num"])
 
-        self.x_stage = Thorlabs.KinesisMotor("27262884")
         self.y_stage = Thorlabs.KinesisMotor("27256199")
         self.z_stage = Thorlabs.KinesisMotor("27256522")
         # # get the config for this device.
