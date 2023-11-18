@@ -70,7 +70,7 @@ class KinesisStage(MotorInterface):
             axis_labels:
                 - phi
             phi:
-                hw_type: 'TDC001'
+                hw_type: 'qTDC001'
                 serial_num: 27500136
                 pitch: 17.87
                 unit: 'degree'
@@ -119,22 +119,20 @@ class KinesisStage(MotorInterface):
     """
 
     # Grab all the configurations for the x,y,z motors in the olin file.
-    _x = ConfigOption(name='x')
-    _y = ConfigOption(name='y')
-    _z = ConfigOption(name='z')
-    self.x_stage = Thorlabs.KinesisMotor(self._x.get('serial_num'))
-    self.y_stage = Thorlabs.KinesisMotor(self._y.get('serial_num'))
-    self.z_stage = Thorlabs.KinesisMotor(self._z.get('serial_num'))
+    _x_serial_number = ConfigOption(name='x_serial_num')
+    _y_serial_number = ConfigOption(name='y_serial_num')
+    _z_serial_number = ConfigOption(name='z_serial_num')
 
     def on_activate(self):
         """ Initialize instance variables and connect to hardware as configured.
         """
         pass
-        # self.log.warning("This module has not been tested on the new qudi core."
-        #                  "Use with caution and contribute bug fixed back, please.")
-        # self.x_stage = Thorlabs.KinesisMotor(self._x.get('serial_num'))
-        # self.y_stage = Thorlabs.KinesisMotor(self._y.get('serial_num'))
-        # self.z_stage = Thorlabs.KinesisMotor(self._z.get('serial_num'))
+        self.log.warning("This module has not been tested on the new qudi core."
+                         "Use with caution and contribute bug fixed back, please.")
+        self.X_motor = Thorlabs.KinesisMotor(self._x_serial_number)
+        self.Y_motor = Thorlabs.KinesisMotor(self._y_serial_number)
+        self.Z_motor = Thorlabs.KinesisMotor(self._z_serial_number)
+
         # # create the magnet dump folder
         # # TODO: Magnet stuff needs to move to magnet interfuses. It cannot be in the motor stage class.
         # self._magnet_dump_folder = self._get_magnet_dump()
