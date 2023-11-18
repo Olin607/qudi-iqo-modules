@@ -40,11 +40,15 @@ from ctypes import c_long, c_buffer, c_float, windll, pointer
 from qudi.interface.motor_interface import MotorInterface
 from abc import abstractmethod
 from pylablib.devices import Thorlabs
+from qudi.core.configoption import ConfigOption
 import os
 import platform
+import pylablib
+
 
 class KinesisMotor:
-    pass
+    def __init__(self, label):
+        self.label = label
 
 class KinesisStage(MotorInterface):
     """ Control class for an arbitrary collection of KinesisMotor axes.
@@ -114,22 +118,23 @@ class KinesisStage(MotorInterface):
 
     """
 
+    # Grab all the configurations for the x,y,z motors in the olin file.
+    _x = ConfigOption(name='x')
+    _y = ConfigOption(name='y')
+    _z = ConfigOption(name='z')
+    self.x_stage = Thorlabs.KinesisMotor(self._x.get('serial_num'))
+    self.y_stage = Thorlabs.KinesisMotor(self._y.get('serial_num'))
+    self.z_stage = Thorlabs.KinesisMotor(self._z.get('serial_num'))
+
     def on_activate(self):
         """ Initialize instance variables and connect to hardware as configured.
         """
-        self.log.warning("This module has not been tested on the new qudi core."
-                         "Use with caution and contribute bug fixed back, please.")
-        # config = self.getConfiguration()
-        #
-        # self.x_stage = Thorlabs.KinesisMotor(config["option"]["x"]["serial_num"])
-        # self.y_stage = Thorlabs.KinesisMotor(config["option"]["y"]["serial_num"])
-        # self.z_stage = Thorlabs.KinesisMotor(config["option"]["z"]["serial_num"])
-
-        self.y_stage = Thorlabs.KinesisMotor("27256199")
-        self.z_stage = Thorlabs.KinesisMotor("27256522")
-        # # get the config for this device.
-        # config = self.getConfiguration()
-        #
+        pass
+        # self.log.warning("This module has not been tested on the new qudi core."
+        #                  "Use with caution and contribute bug fixed back, please.")
+        # self.x_stage = Thorlabs.KinesisMotor(self._x.get('serial_num'))
+        # self.y_stage = Thorlabs.KinesisMotor(self._y.get('serial_num'))
+        # self.z_stage = Thorlabs.KinesisMotor(self._z.get('serial_num'))
         # # create the magnet dump folder
         # # TODO: Magnet stuff needs to move to magnet interfuses. It cannot be in the motor stage class.
         # self._magnet_dump_folder = self._get_magnet_dump()
@@ -222,6 +227,7 @@ class KinesisStage(MotorInterface):
         #     # set the backlash correction since the forward movement is
         #     # preciser than the backward:
         #     self._axis_dict[axis_label].set_backlash(backlash_correction)
+
     def on_deactivate(self):
         pass
 
