@@ -227,7 +227,10 @@ class KinesisStage(MotorInterface):
         #     self._axis_dict[axis_label].set_backlash(backlash_correction)
 
     def on_deactivate(self):
-        pass
+        self.X_motor.close()
+        self.Y_motor.close()
+        self.Z_motor.close()
+        log.debug("X, Y, and Z motors disconnected")
 
     def get_constraints(self):
         """ Retrieve the hardware constrains from the motor device.
