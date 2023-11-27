@@ -367,7 +367,7 @@ class KinesisStage(MotorInterface):
 
         pos['x_position'] = self.X_motor.get_position()
         pos['y_position'] = self.Y_motor.get_position()
-        pos['z_pos'] = self.Z_motor.get_position()
+        pos['z_position'] = self.Z_motor.get_position()
 
         return pos
 
@@ -382,7 +382,7 @@ class KinesisStage(MotorInterface):
 
         @return dict: with the axis label as key and the status number as item.
         """
-        pass
+        return self.X_motor.is_moving() or self.Y_motor.is_moving() or self.Z_motor.is_moving()
 
     def calibrate(self, param_list=None):
         """ Calibrates the stage.
@@ -399,7 +399,7 @@ class KinesisStage(MotorInterface):
         zero point for the passed axis. The calibration procedure will be
         different for each stage.
         """
-        pass
+        raise InterfaceImplementationError('MagnetStageInterface>calibrate')
 
     def get_velocity(self, param_list=None):
         """ Gets the current velocity for all connected axes.
