@@ -316,8 +316,12 @@ class KinesisStage(MotorInterface):
 
         @return int: error code (0:OK, -1:error)
         """
-        move = param_dict[label_axis]
-        self._x_stage.move_to(move)
+        constraints = self.get_constraints()
+        curr_pos_dict = self.get_pos()
+
+        self.X_motor._move_by(param_dict['x'])
+        self.Y_motor._move_by(param_dict['y'])
+        self.Z_motor._move_by(param_dict['z'])
 
     def move_abs(self, param_dict):
         """ Moves stage to absolute position (absolute movement)
@@ -330,14 +334,22 @@ class KinesisStage(MotorInterface):
 
         @return int: error code (0:OK, -1:error)
         """
-        pass
+        constraints = self.get_constraints()
+        curr_pos_dict = self.get_pos()
+
+        self.X_motor._move_to(param_dict['x'])
+        self.Y_motor._move_to(param_dict['y'])
+        self.Z_motor._move_to(param_dict['z'])
 
     def abort(self):
         """ Stops movement of the stage
 
         @return int: error code (0:OK, -1:error)
         """
-        pass
+        self.X_motor.abort()
+        self.Y_motor.abort()
+        self.Z_motor.abort()
+        log.debug('X, Y, and Z motor were all aborted.')
 
     def get_pos(self, param_list=None):
         """ Gets current position of the stage arms
@@ -351,7 +363,13 @@ class KinesisStage(MotorInterface):
         @return dict: with keys being the axis labels and item the current
                       position.
         """
-        pass
+        pos = {}
+
+        pos['x_position'] = self.X_motor.get_position()
+        pos['y_position'] = self.Y_motor.get_position()
+        pos['z_pos'] = self.Z_motor.get_position()
+
+        return pos
 
     def get_status(self, param_list=None):
         """ Get the status of the position
