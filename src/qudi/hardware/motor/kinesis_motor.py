@@ -292,7 +292,16 @@ class KinesisStage(MotorInterface):
         constraints[axis0['label']] = axis0
         constraints[axis1['label']] = axis1
         """
-        pass
+        constraints = {}
+
+        constraints['position_min'] = ConfigOption(name='pos_min')
+        constraints['position_max'] = ConfigOption(name='pos_max')
+        constraints['velocity_min'] = ConfigOption(name='vel_min')
+        constraints['velocity_max'] = ConfigOption(name='vel_max')
+        constraints['acceleration_min'] = ConfigOption(name='acc_min')
+        constraints['acceleration_max'] = ConfigOption(name='acc_max')
+
+        return constraints
 
     def move_rel(self,  param_dict):
         """ Moves stage in given direction (relative movement)
