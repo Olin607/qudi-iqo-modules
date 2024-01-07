@@ -440,7 +440,6 @@ class KinesisStage(MotorInterface):
             resources more agressively. The default query time checks for stage movement
             once every millisecond (1e-3 s).
 
-        Note that this method may be implemented differently than the native Thorlabs
         motor.wait_move() supplied by pylablib.
         """
         while self.is_moving():
