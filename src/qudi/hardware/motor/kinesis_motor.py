@@ -124,6 +124,12 @@ class KinesisStage(MotorInterface):
     _x_serial_number = ConfigOption(name='x_serial_num')
     _y_serial_number = ConfigOption(name='y_serial_num')
     _z_serial_number = ConfigOption(name='z_serial_num')
+    _position_min = ConfigOption(name='pos_min')
+    _position_max = ConfigOption(name='pos_max')
+    _velocity_min = ConfigOption(name='vel_min')
+    _velocity_max = ConfigOption(name='vel_max')
+    _acceleration_min = ConfigOption(name='acc_min')
+    _acceleration_max = ConfigOption(name='acc_max')
 
     def on_activate(self):
         """ Initialize instance variables and connect to hardware as configured.
@@ -293,16 +299,16 @@ class KinesisStage(MotorInterface):
         constraints[axis0['label']] = axis0
         constraints[axis1['label']] = axis1
         """
-        constraints = {}
+        self.constraints = {}
 
-        constraints['position_min'] = ConfigOption(name='pos_min')
-        constraints['position_max'] = ConfigOption(name='pos_max')
-        constraints['velocity_min'] = ConfigOption(name='vel_min')
-        constraints['velocity_max'] = ConfigOption(name='vel_max')
-        constraints['acceleration_min'] = ConfigOption(name='acc_min')
-        constraints['acceleration_max'] = ConfigOption(name='acc_max')
+        self.constraints['position_min'] = self._position_min
+        self.constraints['position_max'] = self._position_max
+        self.constraints['velocity_min'] = self._velocity_min
+        self.constraints['velocity_max'] = self._velocity_max
+        self.constraints['acceleration_min'] = self._acceleration_min
+        self.constraints['acceleration_max'] = self._acceleration_max
 
-        return constraints
+        return self.constraints
 
     def move_rel(self,  param_dict):
         """ Moves stage in given direction (relative movement)
@@ -366,9 +372,9 @@ class KinesisStage(MotorInterface):
         """
         position = {}
 
-        position['x'] = self.X_motor.get_pos(param_list['x'])
-        position['y'] = self.Y_motor.get_pos(param_list['y'])
-        position['z'] = self.Z_motor.get_pos(param_list['z'])
+        position['x'] = self.X_motor.get_position(param_list['x'])
+        position['y'] = self.Y_motor.get_position(param_list['y'])
+        position['z'] = self.Z_motor.get_position(param_list['z'])
 
         return position
 

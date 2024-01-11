@@ -32,7 +32,7 @@ from qudi.util.mutex import Mutex
 
 
 class KinesisMotorLogic(LogicBase):
-    _kinesis_motor = Connector(interface='MotorInterface')
+    kinesis_motor = Connector(interface='MotorInterface')
 
     _kinesis_motor_X = ConfigOption(name='x_serial_num')
     _kinesis_motor_Y = ConfigOption(name='y_serial_num')
@@ -43,7 +43,7 @@ class KinesisMotorLogic(LogicBase):
         self.thread_lock = Mutex()
 
     def on_activate(self):
-        self._motor = self._kinesis_motor()
+        self._motor = self.kinesis_motor()
 
     def on_deactivate(self):
         return 0
