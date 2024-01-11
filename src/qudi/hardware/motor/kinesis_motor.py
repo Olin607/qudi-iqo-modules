@@ -128,7 +128,6 @@ class KinesisStage(MotorInterface):
     def on_activate(self):
         """ Initialize instance variables and connect to hardware as configured.
         """
-        pass
         self.log.warning("This module has not been tested on the new qudi core."
                          "Use with caution and contribute bug fixed back, please.")
         self.X_motor = Thorlabs.KinesisMotor(self._x_serial_number)
@@ -365,13 +364,13 @@ class KinesisStage(MotorInterface):
         @return dict: with keys being the axis labels and item the current
                       position.
         """
-        pos = {}
+        position = {}
 
-        pos['x_position'] = self.X_motor.get_position()
-        pos['y_position'] = self.Y_motor.get_position()
-        pos['z_position'] = self.Z_motor.get_position()
+        position['x'] = self.X_motor.get_pos(param_list['x'])
+        position['y'] = self.Y_motor.get_pos(param_list['y'])
+        position['z'] = self.Z_motor.get_pos(param_list['z'])
 
-        return pos
+        return position
 
     def get_status(self, param_list=None):
         """ Get the status of the position
@@ -384,7 +383,7 @@ class KinesisStage(MotorInterface):
 
         @return dict: with the axis label as key and the status number as item.
         """
-        return self.X_motor.is_moving() or self.Y_motor.is_moving() or self.Z_motor.is_moving()
+        return self.X_motor.get_status() or self.Y_motor.get_status() or self.Z_motor.get_status()
 
     def calibrate(self, param_list=None):
         """ Calibrates the stage.
@@ -416,7 +415,7 @@ class KinesisStage(MotorInterface):
         """
         pass
 
-    def set_velocity(self, param_dict):
+    def set_velocity(self, param_dict=None):
         """ Write new value for velocity.
 
         @param dict param_dict: dictionary, which passes all the relevant
