@@ -120,25 +120,65 @@ class KinesisStage(MotorInterface):
 
     """
 
-    # Grab all the configurations for the x,y,z motors in the olin file.
-    _x_serial_number = ConfigOption(name='x_serial_num')
-    _y_serial_number = ConfigOption(name='y_serial_num')
-    _z_serial_number = ConfigOption(name='z_serial_num')
-    _position_min = ConfigOption(name='pos_min')
-    _position_max = ConfigOption(name='pos_max')
-    _velocity_min = ConfigOption(name='vel_min')
-    _velocity_max = ConfigOption(name='vel_max')
-    _acceleration_min = ConfigOption(name='acc_min')
-    _acceleration_max = ConfigOption(name='acc_max')
+    # Set up all the configurations for the x,y,z motors.
+    _x = ConfigOption('x_serial_num', '27262884')
+    _y = ConfigOption('y_serial_num', '27256199')
+    _z = ConfigOption('z_serial_num', '27256522')
+
+    # Constraints for the x,y and z motors.
+    _pos_min = ConfigOption('pos_min', 0)
+    _pos_max = ConfigOption('pos_max', .025)
+    _vel_min = ConfigOption('vel_min', .001)
+    _vel_max = ConfigOption('vel_max', .015)
+    _acc_min = ConfigOption('acc_min', .004)
+    _acc_max = ConfigOption('acc_max', .01)
+
+    _x_serial_number = _x
+    _y_serial_number = _y
+    _z_serial_number = _z
+    _position_min = _pos_min
+    _position_max = _pos_max
+    _velocity_min = _vel_min
+    _velocity_max = _vel_max
+    _acceleration_min = _acc_min
+    _acceleration_max = _acc_max
+
+    def get_x_serial_number(self):
+        return self._x_serial_number
+
+    def get_y_serial_number(self):
+        return self._y_serial_number
+
+    def get_z_serial_number(self):
+        return self._z_serial_number
+
+    def get_position_min(self):
+        return self._position_min
+
+    def get_position_max(self):
+        return self._position_max
+
+    def get_velocity_min(self):
+        return self._velocity_min
+
+    def get_velocity_max(self):
+        return self._velocity_max
+
+    def get_acceleration_min(self):
+        return self._acceleration_min
+
+    def get_acceleration_max(self):
+        return self._acceleration_max
 
     def on_activate(self):
         """ Initialize instance variables and connect to hardware as configured.
         """
         self.log.warning("This module has not been tested on the new qudi core."
                          "Use with caution and contribute bug fixed back, please.")
-        self.X_motor = Thorlabs.KinesisMotor(self._x_serial_number)
-        self.Y_motor = Thorlabs.KinesisMotor(self._y_serial_number)
-        self.Z_motor = Thorlabs.KinesisMotor(self._z_serial_number)
+
+        self.X_motor = Thorlabs.KinesisMotor(self.get_x_serial_number())
+        self.Y_motor = Thorlabs.KinesisMotor(self.get_y_serial_number())
+        self.Z_motor = Thorlabs.KinesisMotor(self.get_z_serial_number())
 
         # # create the magnet dump folder
         # # TODO: Magnet stuff needs to move to magnet interfuses. It cannot be in the motor stage class.
@@ -301,12 +341,12 @@ class KinesisStage(MotorInterface):
         """
         self.constraints = {}
 
-        self.constraints['position_min'] = self._position_min
-        self.constraints['position_max'] = self._position_max
-        self.constraints['velocity_min'] = self._velocity_min
-        self.constraints['velocity_max'] = self._velocity_max
-        self.constraints['acceleration_min'] = self._acceleration_min
-        self.constraints['acceleration_max'] = self._acceleration_max
+        self.constraints['position_min'] = self.get_position_min()
+        self.constraints['position_max'] = self.get_position_max()
+        self.constraints['velocity_min'] = self.get_velocity_min()
+        self.constraints['velocity_max'] = self.get_velocity_max()
+        self.constraints['acceleration_min'] = self.get_acceleration_min()
+        self.constraints['acceleration_max'] = self.get_acceleration_max()
 
         return self.constraints
 
@@ -372,9 +412,9 @@ class KinesisStage(MotorInterface):
         """
         position = {}
 
-        position['x'] = self.X_motor.get_position(param_list['x'])
-        position['y'] = self.Y_motor.get_position(param_list['y'])
-        position['z'] = self.Z_motor.get_position(param_list['z'])
+        position['x'] = self.X_motor.get_position()
+        position['y'] = self.Y_motor.get_position()
+        position['z'] = self.Z_motor.get_position()
 
         return position
 

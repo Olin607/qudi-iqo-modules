@@ -34,13 +34,49 @@ from qudi.util.mutex import Mutex
 class KinesisMotorLogic(LogicBase):
     kinesis_motor = Connector(interface='MotorInterface')
 
-    _kinesis_motor_X = ConfigOption(name='x_serial_num')
-    _kinesis_motor_Y = ConfigOption(name='y_serial_num')
-    _kinesis_motor_Z = ConfigOption(name='z_serial_num')
+    # Set up all the configurations for the x,y,z motors.
+    _x = ConfigOption('x_serial_num', '27262884')
+    _y = ConfigOption('y_serial_num', '27256199')
+    _z = ConfigOption('z_serial_num', '27256522')
+
+    # Constraints for the x,y and z motors.
+    _pos_min = ConfigOption('pos_min', 0)
+    _pos_max = ConfigOption('pos_max', .025)
+    _vel_min = ConfigOption('vel_min', .001)
+    _vel_max = ConfigOption('vel_max', .015)
+    _acc_min = ConfigOption('acc_min', .004)
+    _acc_max = ConfigOption('acc_max', .01)
 
     def __init__(self, config, **kwargs):
         super().__init__(config=config, **kwargs)
         self.thread_lock = Mutex()
+
+    def get_x_serial_number(self):
+        return self._x
+
+    def get_y_serial_number(self):
+        return self._y
+
+    def get_z_serial_number(self):
+        return self._z
+
+    def get_position_min(self):
+        return self._pos_min
+
+    def get_position_max(self):
+        return self._pos_max
+
+    def get_velocity_min(self):
+        return self._vel_min
+
+    def get_velocity_max(self):
+        return self._vel_max
+
+    def get_acceleration_min(self):
+        return self._acc_min
+
+    def get_acceleration_max(self):
+        return self._acc_max
 
     def on_activate(self):
         self._motor = self.kinesis_motor()
