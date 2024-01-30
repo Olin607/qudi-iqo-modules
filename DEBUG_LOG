@@ -1,0 +1,27 @@
+src/qudi/hardware/motor/kinesis_motor.py
+
+Issue #1: Grabbing config values from olin.cfg and inserting into motor module.
+
+Debug 1: Call "ConfigOption('name') but does not work as it only grabs the
+address of the configuration file and not the actual value itself.
+
+Debug 2: make current private variable self but still doesn't grab the
+correct value.
+
+Debug 3: Current set up but did not insert value into the "ConfigOption"
+so values just returned "NONE".
+
+Debug 4: Inserted the direct value into the private variables and
+worked but is not being called dynamically.
+
+Debug 5: Needed to call get functions instead of calling self._x_serial_number
+as it would still give the address rather than the actual value.
+
+Debug 6: Need to split all of the values up
+EX. _pos_min = ConfigOption('pos_min', 0)
+    _postition_min = _pos_min
+    def get_pos_min(self):
+        return self._position_min
+NOT:
+    _pos_min = ConfigOption('pos_min', 0)
+    self._pos_min
