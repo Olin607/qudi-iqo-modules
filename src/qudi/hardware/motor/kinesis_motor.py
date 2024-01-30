@@ -31,6 +31,11 @@ which can be obtained directly from
     https://www.thorlabs.com/software_pages/ViewSoftwarePage.cfm?Code=APT
 """
 
+"""
+This module was developed from pylablib.devices, written originally by James Huang
+(james.huang.1@vanderbilt.edu). The code was inherited by David Curie's motor module 
+and the qudi-iqo-modules motor module.  
+"""
 from collections import OrderedDict
 
 from qudi.core.module import Base
@@ -144,30 +149,66 @@ class KinesisStage(MotorInterface):
     _acceleration_max = _acc_max
 
     def get_x_serial_number(self):
+        """ Gets the current x serial number.
+
+                @return string : the numbers correlated to the x motors.
+        """
         return self._x_serial_number
 
     def get_y_serial_number(self):
+        """ Gets the current y serial number.
+
+                  @return string : the numbers correlated to the y motors.
+          """
         return self._y_serial_number
 
     def get_z_serial_number(self):
+        """ Gets the current z serial number.
+
+                  @return string : the numbers correlated to the z motors.
+          """
         return self._z_serial_number
 
     def get_position_min(self):
+        """ Gets the current minimum position restriction
+
+                  @return string : the numbers correlated to the minimum position.
+        """
         return self._position_min
 
     def get_position_max(self):
+        """ Gets the current maximum position restriction
+
+                         @return string : the numbers correlated to the maximum position.
+        """
         return self._position_max
 
     def get_velocity_min(self):
+        """ Gets the current minimum velocity restriction
+
+                         @return string : the numbers correlated to the minimum velocity.
+        """
         return self._velocity_min
 
     def get_velocity_max(self):
+        """ Gets the current maximum position restriction
+
+                         @return string : the numbers correlated to the maximum velocity.
+        """
         return self._velocity_max
 
     def get_acceleration_min(self):
+        """ Gets the current minimum acceleration restriction
+
+                         @return string : the numbers correlated to the minimum acceleration.
+        """
         return self._acceleration_min
 
     def get_acceleration_max(self):
+        """ Gets the current maximum position restriction
+
+                         @return string : the numbers correlated to the maximum position.
+        """
         return self._acceleration_max
 
     def on_activate(self):
@@ -274,6 +315,10 @@ class KinesisStage(MotorInterface):
         #     self._axis_dict[axis_label].set_backlash(backlash_correction)
 
     def on_deactivate(self):
+        """ Deactivates the motor connection from the framework.
+
+        """
+
         self.X_motor.close()
         self.Y_motor.close()
         self.Z_motor.close()
