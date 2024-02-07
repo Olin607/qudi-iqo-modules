@@ -3,7 +3,23 @@ import numpy as np
 import logging as log
 from src.qudi.hardware.motor.kinesis_motor import KinesisStage
 
-class Scanner:
+
+class Scanner(KinesisStage):
+
+    def __init__(self, x_motor, y_motor, z_motor):
+        super().__init__(x_motor, y_motor, z_motor)
+        self.X_motor = x_motor
+        self.Y_motor = y_motor
+        self.Z_motor = yzmotor
+
+        self.start_pos = None
+        self.stop_pos = None
+        self.num_steps = None
+
+    def is_moving(self):
+        """Query the status of all three axes; return false only when all three motors are stopped."""
+        return self.X_motor.is_moving() or self.Y_motor.is_moving() or self.Z_motor.is_moving()
+
     def wait_move(self, query_interval=1e-3):
         """Repeatedly query whether the stage is moving by some time interval in seconds.
 
@@ -30,49 +46,41 @@ class Scanner:
               'or leave blank to use current position.')
         start_query = input('(x_start, y_start, z_start): ')
         if start_query == '':
-            start_pos = self.get_position()
+            self.start_pos = self.get_position()
         else:
-            start_pos = tuple(unit_conv * val for val in map(float, start_query.split(',')))
+            self.start_pos = [unit_conv * float(val) for val in start_query.split()]
 
         print(f'Enter absolute stopping position in {user_scale} '
               'or leave blank to use current position.')
         stop_query = input('(x_stop, y_stop, z_stop): ')
         if stop_query == '':
-            stop_pos = self.get_position()
+            self.stop_pos = self.get_position()
         else:
-            stop_pos = tuple(unit_conv * val for val in map(float, stop_query.split(',')))
+            self.stop_pos = [unit_conv * float(val) for val in stop_query.split()]
 
         print('Enter number of steps or leave blank for single measurement: ')
         num_query = input('(x_steps, y_steps, z_steps): ')
         if num_query == '':
-            num_steps = (1, 1, 1)
+            self.num_steps = [1, 1, 1]
         else:
-            num_steps = tuple(map(int, num_query.split(',')))
-
-        print(f'\nThe following scan will be conducted:\n'
-              f'start_pos\t=\t{start_pos} m\n'
-              f'stop_pos\t=\t{stop_pos} m\n'
-              f'num_steps\t=\t{num_steps}\n'
-              f'Total measurements\t{np.product(num_steps)}\n')
+            self.num_steps = [int(num) for num in num_query.split()]
 
         answer = input('Continue? ([Y]/n): ')
         if answer.lower() not in ['', 'y', 'yes']:
-            print('Aborting script')
+            print('Aborting script as prompt was not answered correctly.')
             exit()
-        return (start_pos, stop_pos, num_steps)
+        else:
+            print(f'\nThe following scan will be conducted:\n'
+              f'start_pos\t=\t{self.start_pos} m\n'
+              f'stop_pos\t=\t{self.stop_pos} m\n'
+              f'num_steps\t=\t{self.num_steps}\n'
+              f'Total measurements\t{np.product(self.num_steps)}\n')
 
-    def raster(self, start_pos, stop_pos, num_steps, callback=None, reset=False):
+    def raster(self, callback=None, reset=False):
         """Move the stage from start to stop in a specified number of steps.
 
         Parameters
         ----------
-        start_pos : array-like
-            Absolute starting coordinate (x, y, z), specified in meters.
-        stop_pos : array-like
-            Absolute stopping coordinate (x, y, z), specified in meters.
-        num_steps: array-like of integers
-            The number of steps to make in each (x, y, z) direction.
-            Each of x_steps, y_steps, and z_steps must be >=1.
         callback : function, optional
             A callable process to perform at each coordinate of the raster grid.
             Any return value from the callback function is lumped into an array
@@ -116,7 +124,8 @@ class Scanner:
 
         Examples
         --------
-        >>> stage.raster((1e-3, 1e-3, 1e-3), (2e-3, 3e-3, 4e-3), (5, 5, 5))
+        >>> stage.query()
+        >>> stage.raster(1e-3 1e-3 1e-3, 2e-3, 3e-3, 4e-3), (5, 5, 5))
         # Move to position (1mm, 1mm, 1mm) on the stage, then move along the
         # x-axis to (2mm, 1mm, 1mm) in 5 steps such that x values stop at
         # 1.00mm, 1.25mm, 1.50mm, 1.75mm, 2.00mm. Then move one unit in the
@@ -153,11 +162,11 @@ class Scanner:
         # x and z coordinates in the stop_pos are ignored.
         """
 
-        x_start, y_start, z_start = start_pos
-        x_stop, y_stop, z_stop = stop_pos
-        x_size, y_size, z_size = num_steps
-        log.info(f'Starting raster scan from {start_pos} to {stop_pos} '
-                 f'with steps {num_steps}')
+        x_start, y_start, z_start = self.start_pos[0], self.start_pos[1], self.start_pos[2]
+        x_stop, y_stop, z_stop = self.stop_pos[0], self.stop_pos[1], self.stop_pos[2]
+        x_size, y_size, z_size = self.num_steps[0], self.num_steps[1], self.num_steps[2]
+        log.info(f'Starting raster scan from {self.start_pos} to {self.stop_pos} '
+                 f'with steps {self.num_steps}')
         coordinates = []  # Empty list to store location of each coordinate
         data_values = []  # Empty list to store results of each coordinate
         for z in np.linspace(z_start, z_stop, z_size):
@@ -176,9 +185,9 @@ class Scanner:
         if len(data_values) == 0:
             data_values = None
         else:
-            data_values = np.asarray(data_values).reshape(*num_steps[::-1], -1)
+            data_values = np.asarray(data_values).reshape(*self.num_steps[::-1], -1)
         # Store coordinates as formatted array of shape (z, y, x, 3D_coordinate)
-        self.coordinates = np.asarray(coordinates).reshape(*num_steps[::-1], -1)
+        self.coordinates = np.asarray(coordinates).reshape(*self.num_steps[::-1], -1)
         if reset:
             log.info('Resetting position')
             self.move_to(x_start, y_start, z_start)
