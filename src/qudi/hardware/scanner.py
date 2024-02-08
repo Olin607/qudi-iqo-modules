@@ -10,7 +10,7 @@ class Scanner(KinesisStage):
         super().__init__(x_motor, y_motor, z_motor)
         self.X_motor = x_motor
         self.Y_motor = y_motor
-        self.Z_motor = yzmotor
+        self.Z_motor = z_motor
 
         self.start_pos = None
         self.stop_pos = None
