@@ -384,16 +384,16 @@ class KinesisStage(MotorInterface):
         constraints[axis0['label']] = axis0
         constraints[axis1['label']] = axis1
         """
-        self.constraints = {}
+        constraints = {}
 
-        self.constraints['position_min'] = self.get_position_min()
-        self.constraints['position_max'] = self.get_position_max()
-        self.constraints['velocity_min'] = self.get_velocity_min()
-        self.constraints['velocity_max'] = self.get_velocity_max()
-        self.constraints['acceleration_min'] = self.get_acceleration_min()
-        self.constraints['acceleration_max'] = self.get_acceleration_max()
+        constraints['position_min'] = self.get_position_min()
+        constraints['position_max'] = self.get_position_max()
+        constraints['velocity_min'] = self.get_velocity_min()
+        constraints['velocity_max'] = self.get_velocity_max()
+        constraints['acceleration_min'] = self.get_acceleration_min()
+        constraints['acceleration_max'] = self.get_acceleration_max()
 
-        return self.constraints
+        return constraints
 
     def move_rel(self,  param_dict):
         """ Moves stage in given direction (relative movement)
@@ -409,7 +409,7 @@ class KinesisStage(MotorInterface):
         @return int: error code (0:OK, -1:error)
         """
         constraints = self.get_constraints()
-        curr_pos_dict = self.get_pos()
+        current_position = self.get_pos()
 
         self.X_motor.move_by(param_dict['x'])
         self.Y_motor.move_by(param_dict['y'])
@@ -427,7 +427,7 @@ class KinesisStage(MotorInterface):
         @return int: error code (0:OK, -1:error)
         """
         constraints = self.get_constraints()
-        curr_pos_dict = self.get_pos()
+        current_position = self.get_pos()
 
         self.X_motor.move_to(param_dict['x'])
         self.Y_motor.move_to(param_dict['y'])
@@ -457,9 +457,9 @@ class KinesisStage(MotorInterface):
         """
         position = {}
 
-        position['x'] = self.X_motor.get_position()
-        position['y'] = self.Y_motor.get_position()
-        position['z'] = self.Z_motor.get_position()
+        position['x'] = self.X_motor.get_position() * 1e-3
+        position['y'] = self.Y_motor.get_position() * 1e-3
+        position['z'] = self.Z_motor.get_position() * 1e-3
 
         return position
 

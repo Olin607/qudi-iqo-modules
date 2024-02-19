@@ -87,21 +87,44 @@ class KinesisMotorLogic(LogicBase):
     def get_constraints(self):
         return self._motor.get_constraints()
 
-    def move_rel(self, motor_channel=None, degree=None):
-        return self._motor.move_rel(motor_channel, degree)
+    def move_rel(self, param_dict=None):
+        if param_dict is None:
+            self.log.error("Move_rel's param_dict is empty.")
+            return -1
+        return self._motor.move_rel(param_dict)
 
-    def move_abs(self, motor_channel=None, degree=None):
-        return self._motor.move_abs(motor_channel, degree)
+    def move_abs(self, param_dict=None):
+        if param_dict is None:
+            self.log.error("Move_abs's param_dict is empty.")
+            return -1
+        return self._motor.move_abs(parm_dict)
 
-    def get_pos(self, motor_channel=None, degree=None):
-        return self._motor.get_pos(motor_channel, degree)
+    def get_pos(self, param_list= None):
+        if param_list is None:
+            self.log.error("get_pos's param_list is empty.")
+            return -1
+        return self._motor.get_pos(param_list)
 
-    def get_status(self, motor_channel=None, degree=None):
-        return self._motor.get_status(motor_channel, degree)
+    def get_status(self, param_list):
+        if param_list is None:
+            self.log.error("get_status's param_list is empty.")
+            return -1
+        return self._motor.get_status(param_list)
 
-    def calibrate(self, motor_channel=None, degree=None):
-        return self._motor.calibrate(motor_channel, degree)
+    def calibrate(self, param_dict=None):
+        if param_dict is None:
+            self.log.error("calibrate param_dict is empty.")
+            return -1
+        return self._motor.calibrate(param_dict)
 
-    def get_velocity(self, motor_channel=None, degree=None):
-        return self._motor.get_velocity(motor_channel, degree)
+    def get_velocity(self, param_dict=None):
+        if param_dict is None:
+            self.log.error("get_velocity's param_dict is empty.")
+            return -1
+        return self._motor.get_velocity(param_dict)
 
+    def set_velocity(self, param_dict=None):
+        if param_dict is None:
+            self.log.error("set_velocity's param_list is empty.")
+            return -1
+        return self._motor.set_velocity(param_dict)
