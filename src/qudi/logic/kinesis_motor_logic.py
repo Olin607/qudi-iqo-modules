@@ -97,7 +97,7 @@ class KinesisMotorLogic(LogicBase):
         if param_dict is None:
             self.log.error("Move_abs's param_dict is empty.")
             return -1
-        return self._motor.move_abs(parm_dict)
+        return self._motor.move_abs(param_dict)
 
     def get_pos(self, param_list= None):
         if param_list is None:

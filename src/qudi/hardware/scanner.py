@@ -42,6 +42,7 @@ class Scanner(KinesisStage):
               'measurement at each coordinate of a grid, specified by the\n'
               'start position, end position, and number of subdivisions in\n'
               'three dimensions.\n')
+        print('PLEASE BE AWARE THAT BACKLASH MAY OCCUR IN STAGE MOVEMENT!!!\n')
         print(f'Enter absolute starting position in {user_scale} '
               'or leave blank to use current position.')
         start_query = input('(x_start, y_start, z_start): ')
