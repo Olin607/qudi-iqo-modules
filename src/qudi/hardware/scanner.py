@@ -1,7 +1,6 @@
 import time
 import numpy as np
 import logging as log
-from qudi.hardware.motor.kinesis_motor import KinesisStage
 
 
 class Scanner:
