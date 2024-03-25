@@ -29,6 +29,7 @@ from qudi.core.connector import Connector
 from qudi.core.configoption import ConfigOption
 from qudi.core.module import LogicBase
 from qudi.util.mutex import Mutex
+from qudi.hardware.scanner import Scanner
 
 
 class KinesisMotorLogic(LogicBase):
@@ -50,6 +51,7 @@ class KinesisMotorLogic(LogicBase):
     def __init__(self, config, **kwargs):
         super().__init__(config=config, **kwargs)
         self.thread_lock = Mutex()
+        self.scanner = None
 
     def get_x_serial_number(self):
         return self._x
@@ -80,6 +82,22 @@ class KinesisMotorLogic(LogicBase):
 
     def on_activate(self):
         self._motor = self.kinesis_motor()
+        print(self._motor.x_motor)
+        print(self._motor.y_motor)
+        print(self._motor.z_motor)
+        self.scanner = Scanner(self._motor.x_motor, self._motor.y_motor, self._motor.z_motor)
+        self.run_raster()
+
+    def run_raster(self):
+        answer = input('Run remote control? (yes/no): ').lower()
+        if answer == 'yes':
+            remote = self.scanner.query_raster()
+            if remote:
+                self.scanner.raster()
+            else:
+                print("Scan setup was unsuccessful or aborted.")
+        else:
+            print("Remote control not initiated.")
 
     def on_deactivate(self):
         return 0

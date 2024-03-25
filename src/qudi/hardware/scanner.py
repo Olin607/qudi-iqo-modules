@@ -1,13 +1,12 @@
 import time
 import numpy as np
 import logging as log
-from src.qudi.hardware.motor.kinesis_motor import KinesisStage
+from qudi.hardware.motor.kinesis_motor import KinesisStage
 
 
-class Scanner(KinesisStage):
+class Scanner:
 
     def __init__(self, x_motor, y_motor, z_motor):
-        super().__init__(x_motor, y_motor, z_motor)
         self.X_motor = x_motor
         self.Y_motor = y_motor
         self.Z_motor = z_motor
@@ -44,7 +43,8 @@ class Scanner(KinesisStage):
               'three dimensions.\n')
         print('PLEASE BE AWARE THAT BACKLASH MAY OCCUR IN STAGE MOVEMENT!!!\n')
         print(f'Enter absolute starting position in {user_scale} '
-              'or leave blank to use current position.')
+              'or leave blank to use current position. Make sure you are considering'
+              'Make sure to keep account of the possibility that back-lashings occurs.')
         start_query = input('(x_start, y_start, z_start): ')
         if start_query == '':
             self.start_pos = self.get_position()
@@ -76,6 +76,7 @@ class Scanner(KinesisStage):
               f'stop_pos\t=\t{self.stop_pos} m\n'
               f'num_steps\t=\t{self.num_steps}\n'
               f'Total measurements\t{np.product(self.num_steps)}\n')
+            self.raster()
 
     def raster(self, callback=None, reset=False):
         """Move the stage from start to stop in a specified number of steps.

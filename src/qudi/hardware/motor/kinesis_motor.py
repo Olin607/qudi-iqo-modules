@@ -148,6 +148,24 @@ class KinesisStage(MotorInterface):
     _acceleration_min = _acc_min
     _acceleration_max = _acc_max
 
+    @property
+    def x_motor(self):
+        """ Return the instance of the motor controlling the X axis
+        """
+        return self.X_motor
+
+    @property
+    def y_motor(self):
+        """ Return the instance of the motor controlling the Y axis
+        """
+        return self.Y_motor
+
+    @property
+    def z_motor(self):
+        """ Return the instance of the motor controlling the Z axis
+        """
+        return self.Z_motor
+
     def get_x_serial_number(self):
         """ Gets the current x serial number.
 
