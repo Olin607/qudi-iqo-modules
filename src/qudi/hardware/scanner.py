@@ -63,7 +63,7 @@ class Scanner:
         if num_query == '':
             self.num_steps = [1, 1, 1]
         else:
-            self.num_steps = [int(num) for num in num_query.split()]
+            self.num_steps = [int(float(num)) for num in num_query.split()]
 
         answer = input('Continue? ([Y]/n): ')
         if answer.lower() not in ['', 'y', 'yes']:
@@ -75,7 +75,6 @@ class Scanner:
               f'stop_pos\t=\t{self.stop_pos} m\n'
               f'num_steps\t=\t{self.num_steps}\n'
               f'Total measurements\t{np.product(self.num_steps)}\n')
-            self.raster()
 
     def raster(self, callback=None, reset=False):
         """Move the stage from start to stop in a specified number of steps.
@@ -163,20 +162,25 @@ class Scanner:
         # x and z coordinates in the stop_pos are ignored.
         """
 
-        x_start, y_start, z_start = self.start_pos[0], self.start_pos[1], self.start_pos[2]
-        x_stop, y_stop, z_stop = self.stop_pos[0], self.stop_pos[1], self.stop_pos[2]
-        x_size, y_size, z_size = self.num_steps[0], self.num_steps[1], self.num_steps[2]
+        x_start, y_start, z_start = self.start_pos
+        x_stop, y_stop, z_stop = self.stop_pos
+        x_size, y_size, z_size = self.num_steps
+
+        x_points = np.linspace(x_start, x_stop, x_size)
+        y_points = np.linspace(y_start, y_stop, y_size)
+        z_points = np.linspace(z_start, z_stop, z_size)
+
         log.info(f'Starting raster scan from {self.start_pos} to {self.stop_pos} '
                  f'with steps {self.num_steps}')
         coordinates = []  # Empty list to store location of each coordinate
         data_values = []  # Empty list to store results of each coordinate
-        for z in np.linspace(z_start, z_stop, z_size):
-            for y in np.linspace(y_start, y_stop, y_size):
-                for x in np.linspace(x_start, x_stop, x_size):
-                    self.move_to(x, y, z)
+        for z in z_points:
+            for y in y_points:
+                for x in x_points:
+                    self.move_abs(x, y, z)
                     coordinates.append((x, y, z))
                     self.wait_move()
-                    log.debug(f'{self.get_position()}')
+                    log.debug(f'{self.get_pos()}')
                     # Insert event logic here
                     if callback:
                         c_return = callback()
@@ -191,7 +195,35 @@ class Scanner:
         self.coordinates = np.asarray(coordinates).reshape(*self.num_steps[::-1], -1)
         if reset:
             log.info('Resetting position')
-            self.move_to(x_start, y_start, z_start)
+            self.move_abs(x_start, y_start, z_start)
             self.wait_move()
-            log.info(f'{self.get_position()}')
+            log.info(f'{self.get_pos()}')
         return data_values
+
+    def move_abs(self, x, y, z):
+        """Move the motors to the specified x, y, and z coordinates in absolute terms."""
+        # Assuming that the move_to method in pylablib moves the motor to an absolute position
+        self.X_motor.move_to(x)
+        self.Y_motor.move_to(y)
+        self.Z_motor.move_to(z)
+        # Wait for all motors to stop moving
+        self.wait_move()
+
+    def get_pos(self):
+        """ Gets current position of the stage arms
+
+        @param list param_list: optional, if a specific position of an axis
+                                is desired, then the labels of the needed
+                                axis should be passed in the param_list.
+                                If nothing is passed, then from each axis the
+                                position is asked.
+
+        @return dict: with keys being the axis labels and item the current
+                      position.
+        """
+        positions = {
+            'x': self.X_motor.get_position(),
+            'y': self.Y_motor.get_position(),
+            'z': self.Z_motor.get_position()
+        }
+        return positions

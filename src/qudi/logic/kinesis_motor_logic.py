@@ -82,25 +82,19 @@ class KinesisMotorLogic(LogicBase):
 
     def on_activate(self):
         self._motor = self.kinesis_motor()
-        print(self._motor.x_motor)
-        print(self._motor.y_motor)
-        print(self._motor.z_motor)
         self.scanner = Scanner(self._motor.x_motor, self._motor.y_motor, self._motor.z_motor)
         self.run_raster()
 
     def run_raster(self):
         answer = input('Run remote control? (yes/no): ').lower()
         if answer == 'yes':
-            remote = self.scanner.query_raster()
-            if remote:
-                self.scanner.raster()
-            else:
-                print("Scan setup was unsuccessful or aborted.")
+            self.scanner.query_raster()
+            self.scanner.raster()
         else:
             print("Remote control not initiated.")
 
     def on_deactivate(self):
-        return 0
+        return self._motor.on_deactivate()
 
     def get_constraints(self):
         return self._motor.get_constraints()
