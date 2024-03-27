@@ -53,9 +53,11 @@ import logging
 
 log = logging.getLogger(__name__)
 
+
 class KinesisMotor:
     def __init__(self, label):
         self.label = label
+
 
 class KinesisStage(MotorInterface):
     """ Control class for an arbitrary collection of KinesisMotor axes.
