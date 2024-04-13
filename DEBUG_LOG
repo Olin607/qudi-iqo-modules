@@ -1,4 +1,7 @@
+File Issues/Debugs Experienced
 src/qudi/hardware/motor/kinesis_motor.py
+src/qudi/hardware/scanner.py
+src/qudi/logic/kinesis_motor_logic.py
 
 Issue #1: Grabbing config values from olin.cfg and inserting into motor module.
 
@@ -19,9 +22,18 @@ as it would still give the address rather than the actual value.
 
 Debug 6: Need to split all of the values up
 EX. _pos_min = ConfigOption('pos_min', 0)
-    _postition_min = _pos_min
+    _position_min = _pos_min
     def get_pos_min(self):
         return self._position_min
 NOT:
     _pos_min = ConfigOption('pos_min', 0)
     self._pos_min
+
+Issue #2: Needed to import scanner into the motor logic where
+the motor logic would call both the hardware and the scanner.
+This is the hierarchy where the scanner is a base class that
+could be used for multiple instruments in the logic and the
+logic itself would call the hardware class to execute actions.
+The logic class functions are there to ensure that the
+function exist and the parameters are correct before executing
+directly to the hardware.
