@@ -20,11 +20,6 @@ Copyright (c) the Qudi Developers. See the COPYRIGHT.txt file at the
 top-level directory of this distribution and at <https://github.com/Ulm-IQO/qudi/>
 """
 
-import datetime
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib as mpl
-from PySide2 import QtCore
 from qudi.core.connector import Connector
 from qudi.core.configoption import ConfigOption
 from qudi.core.module import LogicBase
@@ -86,12 +81,13 @@ class KinesisMotorLogic(LogicBase):
         self.run_raster()
 
     def run_raster(self):
-        answer = input('Run remote control? (yes/no): ').lower()
-        if answer == 'yes':
+        answer = input('Run remote control? (yes(y)) / no(n)): ').lower()
+        if answer == 'yes' or answer == 'y':
             self.scanner.query_raster()
             self.scanner.raster()
         else:
             print("Remote control not initiated.")
+            self.log.error('Remote Control not initiated.')
 
     def on_deactivate(self):
         return self._motor.on_deactivate()
