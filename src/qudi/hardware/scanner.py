@@ -44,22 +44,25 @@ class Scanner:
         print(f'Enter absolute starting position in {user_scale} '
               'or leave blank to use current position. Make sure you are considering'
               'Make sure to keep account of the possibility that back-lashings occurs.')
-        start_query = input('(x_start, y_start, z_start): ')
+        start_query = input('(x_start, y_start, z_start) Ex.(1 1 1) / '
+                            'blank input returns current position: ')
         if start_query == '':
-            self.start_pos = self.get_position()
+            self.start_pos = self.get_pos()
         else:
             self.start_pos = [unit_conv * float(val) for val in start_query.split()]
 
         print(f'Enter absolute stopping position in {user_scale} '
               'or leave blank to use current position.')
-        stop_query = input('(x_stop, y_stop, z_stop): ')
+        stop_query = input('(x_stop, y_stop, z_stop) Ex. (1 1 1) / '
+                           'blank input returns current position: ')
         if stop_query == '':
-            self.stop_pos = self.get_position()
+            self.stop_pos = self.get_pos()
         else:
             self.stop_pos = [unit_conv * float(val) for val in stop_query.split()]
 
         print('Enter number of steps or leave blank for single measurement: ')
-        num_query = input('(x_steps, y_steps, z_steps): ')
+        num_query = input('(x_steps, y_steps, z_steps) Ex. (1 1 1) /'
+                          'blank input returns [1 1 1]: ')
         if num_query == '':
             self.num_steps = [1, 1, 1]
         else:
@@ -67,14 +70,13 @@ class Scanner:
 
         answer = input('Continue? ([Y]/n): ')
         if answer.lower() not in ['', 'y', 'yes']:
-            print('Aborting script as prompt was not answered correctly.')
-            exit()
+            log.error("Aborting script as prompt was not answered correctly.")
         else:
             print(f'\nThe following scan will be conducted:\n'
-              f'start_pos\t=\t{self.start_pos} m\n'
-              f'stop_pos\t=\t{self.stop_pos} m\n'
-              f'num_steps\t=\t{self.num_steps}\n'
-              f'Total measurements\t{np.product(self.num_steps)}\n')
+                  f'start_pos\t=\t{self.start_pos} m\n'
+                  f'stop_pos\t=\t{self.stop_pos} m\n'
+                  f'num_steps\t=\t{self.num_steps}\n'
+                  f'Total measurements\t{np.product(self.num_steps)}\n')
 
     def raster(self, callback=None, reset=False):
         """Move the stage from start to stop in a specified number of steps.
@@ -206,8 +208,6 @@ class Scanner:
         self.X_motor.move_to(x)
         self.Y_motor.move_to(y)
         self.Z_motor.move_to(z)
-        # Wait for all motors to stop moving
-        self.wait_move()
 
     def get_pos(self):
         """ Gets current position of the stage arms
