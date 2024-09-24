@@ -15,7 +15,8 @@ class Scanner:
         self.num_steps = None
 
     def is_moving(self):
-        """Query the status of all three axes; return false only when all three motors are stopped."""
+        """Query the status of all three axes;
+        return false only when all three motors are stopped."""
         return self.X_motor.is_moving() or self.Y_motor.is_moving() or self.Z_motor.is_moving()
 
     def wait_move(self, query_interval=1e-3):
