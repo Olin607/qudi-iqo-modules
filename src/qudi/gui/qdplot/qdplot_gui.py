@@ -26,7 +26,7 @@ import numpy as np
 from enum import Enum
 from functools import partial
 from itertools import cycle
-from PySide2 import QtCore, QtGui
+from PySide6 import QtCore, QtGui
 from pyqtgraph import mkColor
 from typing import Optional, Mapping, Sequence, Union, Tuple, List
 from lmfit.model import ModelResult as _ModelResult
@@ -40,7 +40,7 @@ from qudi.util.widgets.fitting import FitConfigurationDialog
 from qudi.util.colordefs import QudiPalette
 from qudi.gui.qdplot.main_window import QDPlotMainWindow
 from qudi.gui.qdplot.plot_widget import QDPlotDockWidget
-from qudi.logic.qdplot_logic import QDPlotConfig
+from qudi.logic.qdplot_logic import QDPlotConfig, QDPlotLogic
 
 
 class PlotAlignment(Enum):
@@ -57,7 +57,7 @@ class QDPlotterGui(GuiBase):
     Example config for copy-paste:
 
     qdplotter:
-        module.Class: 'qdplotter.qdplotter_gui.QDPlotterGui'
+        module.Class: 'qdplot.qdplot_gui.QDPlotterGui'
         options:
             pen_color_list: [[100, 100, 100], 'c', 'm', 'g']
         connect:
@@ -71,7 +71,7 @@ class QDPlotterGui(GuiBase):
     sigSaveData = QtCore.Signal(int, str)                 # plot index, postfix_string
 
     # declare connectors
-    _qdplot_logic = Connector(interface='QDPlotLogic', name='qdplot_logic')
+    _qdplot_logic = Connector(interface=QDPlotLogic, name='qdplot_logic')
 
     # declare config options
     _default_pen_color_list = ConfigOption(name='pen_color_list', default=None)
@@ -131,25 +131,25 @@ class QDPlotterGui(GuiBase):
         self._mw.action_restore_side_by_side_view.triggered.connect(self.restore_side_by_side_view)
         self._mw.action_restore_arced_view.triggered.connect(self.restore_arc_view)
         self._mw.action_save_all.triggered.connect(self._save_all_clicked)
-        self._mw.action_new_plot.triggered.connect(logic.add_plot, QtCore.Qt.QueuedConnection)
+        self._mw.action_new_plot.triggered.connect(logic.add_plot, QtCore.Qt.ConnectionType.QueuedConnection)
 
         # Initialize dock widgets
         self._plot_dockwidgets = list()
         self._color_cyclers = list()
 
         # Connect signal to logic
-        self.sigPlotConfigChanged.connect(logic.set_plot_config, QtCore.Qt.QueuedConnection)
-        self.sigAutoRangeClicked.connect(logic.set_auto_limits, QtCore.Qt.QueuedConnection)
-        self.sigDoFit.connect(logic.do_fit, QtCore.Qt.QueuedConnection)
-        self.sigRemovePlotClicked.connect(logic.remove_plot, QtCore.Qt.QueuedConnection)
-        self.sigSaveData.connect(logic.save_data, QtCore.Qt.BlockingQueuedConnection)
+        self.sigPlotConfigChanged.connect(logic.set_plot_config, QtCore.Qt.ConnectionType.QueuedConnection)
+        self.sigAutoRangeClicked.connect(logic.set_auto_limits, QtCore.Qt.ConnectionType.QueuedConnection)
+        self.sigDoFit.connect(logic.do_fit, QtCore.Qt.ConnectionType.QueuedConnection)
+        self.sigRemovePlotClicked.connect(logic.remove_plot, QtCore.Qt.ConnectionType.QueuedConnection)
+        self.sigSaveData.connect(logic.save_data, QtCore.Qt.ConnectionType.BlockingQueuedConnection)
 
         # Connect signals from logic
-        logic.sigPlotDataChanged.connect(self._update_data, QtCore.Qt.QueuedConnection)
-        logic.sigPlotConfigChanged.connect(self._update_plot_config, QtCore.Qt.QueuedConnection)
-        logic.sigPlotAdded.connect(self._plot_added, QtCore.Qt.QueuedConnection)
-        logic.sigPlotRemoved.connect(self._plot_removed, QtCore.Qt.QueuedConnection)
-        logic.sigFitChanged.connect(self._update_fit_data, QtCore.Qt.QueuedConnection)
+        logic.sigPlotDataChanged.connect(self._update_data, QtCore.Qt.ConnectionType.QueuedConnection)
+        logic.sigPlotConfigChanged.connect(self._update_plot_config, QtCore.Qt.ConnectionType.QueuedConnection)
+        logic.sigPlotAdded.connect(self._plot_added, QtCore.Qt.ConnectionType.QueuedConnection)
+        logic.sigPlotRemoved.connect(self._plot_removed, QtCore.Qt.ConnectionType.QueuedConnection)
+        logic.sigFitChanged.connect(self._update_fit_data, QtCore.Qt.ConnectionType.QueuedConnection)
 
         self._init_plots(logic.plot_count)
 
@@ -158,6 +158,7 @@ class QDPlotterGui(GuiBase):
 
     def show(self):
         """ Make window visible and put it above all other windows. """
+        self._restore_window_geometry(self._mw)
         self._mw.show()
         self._mw.activateWindow()
         self._mw.raise_()
@@ -192,6 +193,7 @@ class QDPlotterGui(GuiBase):
         self._clear_plots()
 
         self._fit_config_dialog.close()
+        self._save_window_geometry(self._mw)
         self._mw.close()
 
         self._fit_config_dialog = None
@@ -249,14 +251,14 @@ class QDPlotterGui(GuiBase):
         self._mw.setDockNestingEnabled(True)
         for ii, dockwidget in enumerate(self._plot_dockwidgets):
             widget = dockwidget.widget()
-            widget.toggle_fit(False)
+            widget.toggle_fit(widget.show_fit)
             widget.toggle_editor(False)
             dockwidget.show()
             dockwidget.setFloating(False)
-            self._mw.addDockWidget(QtCore.Qt.TopDockWidgetArea, dockwidget)
+            self._mw.addDockWidget(QtCore.Qt.DockWidgetArea.TopDockWidgetArea, dockwidget)
         self._mw.resizeDocks(self._plot_dockwidgets,
                              [1] * len(self._plot_dockwidgets),
-                             QtCore.Qt.Horizontal)
+                             QtCore.Qt.Orientation.Horizontal)
 
     def restore_arc_view(self) -> None:
         """ Restore the arrangement of DockWidgets to the default """
@@ -264,21 +266,21 @@ class QDPlotterGui(GuiBase):
         self._mw.setDockNestingEnabled(True)
         for ii, dockwidget in enumerate(self._plot_dockwidgets):
             widget = dockwidget.widget()
-            widget.toggle_fit(False)
+            widget.toggle_fit(widget.show_fit)
             widget.toggle_editor(False)
             dockwidget.show()
             dockwidget.setFloating(False)
             mod = ii % 3
             if mod == 0:
-                self._mw.addDockWidget(QtCore.Qt.TopDockWidgetArea, dockwidget)
+                self._mw.addDockWidget(QtCore.Qt.DockWidgetArea.TopDockWidgetArea, dockwidget)
                 if ii > 2:
                     self._mw.tabifyDockWidget(self._plot_dockwidgets[0], dockwidget)
             elif mod == 1:
-                self._mw.addDockWidget(QtCore.Qt.BottomDockWidgetArea, dockwidget)
+                self._mw.addDockWidget(QtCore.Qt.DockWidgetArea.BottomDockWidgetArea, dockwidget)
                 if ii > 2:
                     self._mw.tabifyDockWidget(self._plot_dockwidgets[1], dockwidget)
             elif mod == 2:
-                self._mw.addDockWidget(QtCore.Qt.BottomDockWidgetArea, dockwidget)
+                self._mw.addDockWidget(QtCore.Qt.DockWidgetArea.BottomDockWidgetArea, dockwidget)
                 if ii > 2:
                     self._mw.tabifyDockWidget(self._plot_dockwidgets[2], dockwidget)
         try:
@@ -286,7 +288,7 @@ class QDPlotterGui(GuiBase):
         except IndexError:
             pass
         else:
-            self._mw.resizeDocks(resize_docks, [1, 1], QtCore.Qt.Horizontal)
+            self._mw.resizeDocks(resize_docks, [1, 1], QtCore.Qt.Orientation.Horizontal)
 
     def restore_tabbed_view(self) -> None:
         """ Restore the arrangement of DockWidgets to the default """
@@ -294,11 +296,11 @@ class QDPlotterGui(GuiBase):
         self._mw.setDockNestingEnabled(True)
         for ii, dockwidget in enumerate(self._plot_dockwidgets):
             widget = dockwidget.widget()
-            widget.toggle_fit(False)
+            widget.toggle_fit(widget.show_fit)
             widget.toggle_editor(False)
             dockwidget.show()
             dockwidget.setFloating(False)
-            self._mw.addDockWidget(QtCore.Qt.TopDockWidgetArea, dockwidget)
+            self._mw.addDockWidget(QtCore.Qt.DockWidgetArea.TopDockWidgetArea, dockwidget)
             if ii > 0:
                 self._mw.tabifyDockWidget(self._plot_dockwidgets[0], dockwidget)
         try:
@@ -382,7 +384,8 @@ class QDPlotterGui(GuiBase):
     def _plot_added(self) -> None:
         index = len(self._plot_dockwidgets)
         dockwidget = QDPlotDockWidget(fit_container=self._qdplot_logic().get_fit_container(index),
-                                      plot_number=index + 1)
+                                      plot_number=index + 1,
+                                      show_fit=False)
         self._plot_dockwidgets.append(dockwidget)
         self._color_cyclers.append(cycle(self._pen_color_list))
 

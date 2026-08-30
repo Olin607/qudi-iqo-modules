@@ -23,7 +23,8 @@ If not, see <https://www.gnu.org/licenses/>.
 __all__ = ['TimeSeriesGui']
 
 import pyqtgraph as pg
-from PySide2 import QtCore, QtWidgets
+import numpy as np
+from PySide6 import QtCore, QtWidgets
 from typing import Union, Dict, Tuple
 
 from qudi.core.statusvariable import StatusVar
@@ -36,6 +37,7 @@ from qudi.core.module import GuiBase
 from qudi.gui.time_series.main_window import TimeSeriesGuiMainWindow
 from qudi.gui.time_series.settings_dialog import TraceViewDialog, ChannelSettingsDialog
 from qudi.interface.data_instream_interface import SampleTiming
+from qudi.logic.time_series_reader_logic import TimeSeriesReaderLogic
 
 
 class TimeSeriesGui(GuiBase):
@@ -53,7 +55,7 @@ class TimeSeriesGui(GuiBase):
     """
 
     # declare connectors
-    _time_series_logic_con = Connector(interface='TimeSeriesReaderLogic')
+    _time_series_logic_con = Connector(interface=TimeSeriesReaderLogic)
 
     # declare ConfigOptions
     _use_antialias = ConfigOption('use_antialias', default=True, constructor=lambda x: bool(x))
@@ -73,6 +75,7 @@ class TimeSeriesGui(GuiBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self._streamer_constraints = None
         self._mw = None
         self._vb = None
         self.curves = dict()
@@ -85,8 +88,8 @@ class TimeSeriesGui(GuiBase):
         self._mw = TimeSeriesGuiMainWindow()
         # Get hardware constraints
         logic = self._time_series_logic_con()
-        hw_constr = logic.streamer_constraints
-        all_channels = list(hw_constr.channel_units)
+        self._streamer_constraints = logic.streamer_constraints
+        all_channels = list(self._streamer_constraints.channel_units)
 
         # Refine ConfigOptions
         self._visible_traces = {
@@ -97,7 +100,7 @@ class TimeSeriesGui(GuiBase):
         }
 
         # Configure PlotWidget
-        if hw_constr.sample_timing == SampleTiming.RANDOM:
+        if self._streamer_constraints.sample_timing == SampleTiming.RANDOM:
             self._mw.trace_plot_widget.setLabel('bottom', 'Sample')
         else:
             self._mw.trace_plot_widget.setLabel('bottom', 'Time', units='s')
@@ -149,7 +152,7 @@ class TimeSeriesGui(GuiBase):
         self._mw.toggle_trace_action.triggered[bool].connect(self._trace_toggled)
         self._mw.record_trace_action.triggered[bool].connect(self._record_toggled)
         self._mw.snapshot_trace_action.triggered.connect(logic.save_trace_snapshot,
-                                                         QtCore.Qt.QueuedConnection)
+                                                         QtCore.Qt.ConnectionType.QueuedConnection)
         self._mw.settings_dockwidget.trace_length_spinbox.editingFinished.connect(
             self._trace_settings_changed
         )
@@ -172,20 +175,20 @@ class TimeSeriesGui(GuiBase):
         self._mw.channel_settings_action.triggered.connect(self._exec_channel_settings_dialog)
 
         # Connect signals to/from logic
-        self.sigStartCounter.connect(logic.start_reading, QtCore.Qt.QueuedConnection)
-        self.sigStopCounter.connect(logic.stop_reading, QtCore.Qt.QueuedConnection)
-        self.sigStartRecording.connect(logic.start_recording, QtCore.Qt.QueuedConnection)
-        self.sigStopRecording.connect(logic.stop_recording, QtCore.Qt.QueuedConnection)
-        self.sigTraceSettingsChanged.connect(logic.set_trace_settings, QtCore.Qt.QueuedConnection)
+        self.sigStartCounter.connect(logic.start_reading, QtCore.Qt.ConnectionType.QueuedConnection)
+        self.sigStopCounter.connect(logic.stop_reading, QtCore.Qt.ConnectionType.QueuedConnection)
+        self.sigStartRecording.connect(logic.start_recording, QtCore.Qt.ConnectionType.QueuedConnection)
+        self.sigStopRecording.connect(logic.stop_recording, QtCore.Qt.ConnectionType.QueuedConnection)
+        self.sigTraceSettingsChanged.connect(logic.set_trace_settings, QtCore.Qt.ConnectionType.QueuedConnection)
         self.sigChannelSettingsChanged.connect(logic.set_channel_settings,
-                                               QtCore.Qt.QueuedConnection)
+                                               QtCore.Qt.ConnectionType.QueuedConnection)
 
-        logic.sigDataChanged.connect(self.update_data, QtCore.Qt.QueuedConnection)
+        logic.sigDataChanged.connect(self.update_data, QtCore.Qt.ConnectionType.QueuedConnection)
         logic.sigTraceSettingsChanged.connect(self.update_trace_settings,
-                                              QtCore.Qt.QueuedConnection)
+                                              QtCore.Qt.ConnectionType.QueuedConnection)
         logic.sigChannelSettingsChanged.connect(self.update_channel_settings,
-                                                QtCore.Qt.QueuedConnection)
-        logic.sigStatusChanged.connect(self.update_status, QtCore.Qt.QueuedConnection)
+                                                QtCore.Qt.ConnectionType.QueuedConnection)
+        logic.sigStatusChanged.connect(self.update_status, QtCore.Qt.ConnectionType.QueuedConnection)
 
         self.update_status(running=logic.module_state() == 'locked',
                            recording=logic.data_recording_active)
@@ -203,6 +206,7 @@ class TimeSeriesGui(GuiBase):
     def show(self):
         """Make window visible and put it above all other windows.
         """
+        self._restore_window_geometry(self._mw)
         self._mw.show()
         self._mw.raise_()
         self._mw.activateWindow()
@@ -232,6 +236,7 @@ class TimeSeriesGui(GuiBase):
         logic.sigTraceSettingsChanged.disconnect(self.update_trace_settings)
         logic.sigChannelSettingsChanged.disconnect(self.update_channel_settings)
         logic.sigStatusChanged.disconnect(self.update_status)
+        self._save_window_geometry(self._mw)
         self._mw.close()
 
     @property
@@ -247,18 +252,18 @@ class TimeSeriesGui(GuiBase):
         dialog = TraceViewDialog(current_settings.keys(), parent=self._mw)
         dialog.set_channel_states(current_settings)
         # Show modal dialog and update logic if necessary
-        if dialog.exec_() == QtWidgets.QDialog.Accepted:
+        if dialog.exec_() == QtWidgets.QDialog.DialogCode.Accepted:
             self._apply_trace_view_settings(dialog.get_channel_states())
 
     def _exec_channel_settings_dialog(self):
         logic = self._time_series_logic_con()
         active_channels, averaged_channels = logic.channel_settings
-        channels = list(logic.streamer_constraints.channel_units)
+        channels = list(self._streamer_constraints.channel_units)
         channel_states = {ch: (ch in active_channels, ch in averaged_channels) for ch in channels}
         dialog = ChannelSettingsDialog(channels, parent=self._mw)
         dialog.set_channel_states(channel_states)
         # Show modal dialog and update logic if necessary
-        if dialog.exec_() == QtWidgets.QDialog.Accepted:
+        if dialog.exec_() == QtWidgets.QDialog.DialogCode.Accepted:
             self._apply_channel_settings(dialog.get_channel_states())
 
     @QtCore.Slot()
@@ -308,7 +313,8 @@ class TimeSeriesGui(GuiBase):
         self._current_value_channel = self._mw.current_value_combobox.currentText()
 
         # Update plot widget axes
-        channel_units = self._time_series_logic_con().streamer_constraints.channel_units
+        self._streamer_constraints = self._time_series_logic_con().streamer_constraints
+        channel_units = self._streamer_constraints.channel_units
         different_units = list({unit for ch, unit in channel_units.items() if ch in enabled})
         self._channels_per_axis = list()
         if len(different_units) == 2:
@@ -382,7 +388,9 @@ class TimeSeriesGui(GuiBase):
                 constraints = self._time_series_logic_con().streamer_constraints
                 ch_unit = constraints.channel_units[channel]
                 precision = self._current_value_channel_precision[channel]
-                if is_integer_type(constraints.data_type):
+                if np.isnan(val):
+                    self._mw.current_value_label.setText(f'{val} {ch_unit}')
+                elif is_integer_type(constraints.data_type):
                     self._mw.current_value_label.setText(f'{val:,d} {ch_unit}')
                 elif precision is None:
                     self._mw.current_value_label.setText(f'{ScaledFloat(val):.5r}{ch_unit}')
@@ -457,10 +465,10 @@ class TimeSeriesGui(GuiBase):
         # Show hidden dock widget and re-dock
         self._mw.settings_dockwidget.show()
         self._mw.settings_dockwidget.setFloating(False)
-        self._mw.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self._mw.settings_dockwidget)
+        self._mw.addDockWidget(QtCore.Qt.DockWidgetArea.BottomDockWidgetArea, self._mw.settings_dockwidget)
         # Set the toolbar to its initial top area
         self._mw.toolbar.show()
-        self._mw.addToolBar(QtCore.Qt.TopToolBarArea, self._mw.toolbar)
+        self._mw.addToolBar(QtCore.Qt.ToolBarArea.TopToolBarArea, self._mw.toolbar)
         # Restore status if something went wrong
         self.update_status(running=self._time_series_logic_con().module_state() == 'locked',
                            recording=self._time_series_logic_con().data_recording_active)
@@ -489,8 +497,8 @@ class TimeSeriesGui(GuiBase):
                 settings_dict['moving_average_width']
             )
             self._mw.settings_dockwidget.moving_average_spinbox.blockSignals(False)
-        sample_timing = self._time_series_logic_con().streamer_constraints.sample_timing
-        if sample_timing == SampleTiming.RANDOM:
+        self._streamer_constraints = self._time_series_logic_con().streamer_constraints
+        if self._streamer_constraints.sample_timing == SampleTiming.RANDOM:
             self._mw.trace_plot_widget.setRange(
                 xRange=[0, settings_dict['trace_window_size'] * settings_dict['data_rate']],
                 disableAutoRange=False

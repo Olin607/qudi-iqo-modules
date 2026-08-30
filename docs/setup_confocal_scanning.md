@@ -182,8 +182,21 @@ docstring of every module's python file. In the list above, a direct link for ev
                 max_channel_samples_buffer: 10000000  # optional
                 read_write_timeout: 10  # optional
 
-# Configuration hints:
-- The scanning gui's `optimizer_plot_dimensions` ConfigOption allows to specify the optimizer's scanning behavior. The default setting `[2,1]` enables one 2D and one 1D optimization step. You may set to eg. `[2,2,2]` to have three two-dimensionsal scans done for optimzation. In the gui (Settings/Optimizer Settings), this will change the list of possible optimizer sequences.  
+# Configuration hints
 - The maximum scanning frequency is given by the bandwidth of your Piezo controller (check the datasheet). It might make sense to put an even smaller limit into your config, since scanning at the hardware limit might introduce artifacts/offsets to your confocal scan.
+- The optimizer scan behavior and sequence are configurable in the scanning gui -> Settings -> Optimizer settings.
 
-# Todo this readme:
+Deprecated:
+- Until v0.5.1, the scanning gui's `optimizer_plot_dimensions` ConfigOption allowed to specify the optimizer's scanning behavior. The default setting `[2,1]` enables one 2D and one 1D optimization step. You may set to eg. `[2,2,2]` to have three two-dimensionsal scans done for optimzation. In the gui (Settings/Optimizer Settings), this will change the list of possible optimizer sequences.  
+
+# Tilt correction
+
+The above configuration will enable the tilt correction feature for the ScanningProbeDummy and NiScanningProbeInterfuse.
+This allows to perform scans in tilted layers, eg. along the surface of a non-flat sample. 
+- In the scanning_probe_gui, you can configure this feature in the menu enabled by 'View' -> 'Tilt correction'.
+- Choose three support vectors in the plane that should become the new $\hat{e}_z$ plane.
+  Instead of manually typing the coordinates of a support vector, hitting the 'Vec 1" button will
+  insert the current crosshair position as support vector 1. 
+- Enable the transformation by the "Tilt correction" button.
+
+# Todo this readme
